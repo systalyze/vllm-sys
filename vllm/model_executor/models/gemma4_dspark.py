@@ -272,8 +272,10 @@ class Gemma4DSparkForCausalLM(Qwen3DSparkForCausalLM):
         assert vllm_config.speculative_config is not None
         self.draft_model_config = vllm_config.speculative_config.draft_model_config
         self.config = self.draft_model_config.hf_config
+        # A prefix distinct from the target's, so the draft's layer names do not
+        # collide with model.layers.N.self_attn.attn.
         self.model = Gemma4DSparkModel(
-            vllm_config=vllm_config, prefix=maybe_prefix(prefix, "model")
+            vllm_config=vllm_config, prefix=maybe_prefix(prefix, "dspark_draft")
         )
         self.lm_head = ParallelLMHead(
             self.config.vocab_size,
