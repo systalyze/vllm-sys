@@ -695,6 +695,12 @@ class Gemma4ModelArchConfigConvertor(ModelArchConfigConvertorBase):
     def is_mm_prefix_lm(self, supports_multimodal: bool = True) -> bool:
         if not supports_multimodal:
             return False
+        # A text-only deployment never sees image tokens, so the mm-prefix mask
+        # must not veto attention backends that lack supports_mm_prefix().
+        import os
+        if os.environ.get("AUDIT_GEMMA4_NO_MM_PREFIX") == "1" and \
+                list(getattr(self.hf_config, "architectures", []) or []) == ["Gemma4ForCausalLM"]:
+            return False
         return (
             getattr(self.hf_text_config, "use_bidirectional_attention", None)
             == "vision"
